@@ -1,0 +1,20 @@
+# R artifacts
+.Rhistory
+.Rproj.user/
+.RData
+.Ruserdata
+
+# Logs & cache
+logs/
+*.log
+
+# Temporary files
+tmp/
+*.tmp
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Model training outputs (if large)
+output/

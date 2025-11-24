@@ -1,0 +1,258 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>🏥 Overdose Risk Assessment</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); margin:0; padding:20px; }
+    .container { background:#fff; max-width:900px; margin:0 auto; border-radius:15px; padding:30px; box-shadow:0 10px 40px rgba(0,0,0,0.2); }
+    h1 { margin:0 0 8px; }
+    .section-title { color:#667eea; font-size:20px; font-weight:600; margin-top:24px; border-bottom:2px solid #667eea; padding-bottom:8px; }
+    .question { background:#f8f9fa; padding:12px 16px; border-radius:8px; margin:12px 0; display:flex; justify-content:space-between; align-items:center; }
+    .btn { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff; padding:12px 24px; border:none; border-radius:8px; font-weight:600; cursor:pointer; }
+    .btn:hover { transform:translateY(-2px); box-shadow:0 5px 15px rgba(102,126,234,0.4); }
+    .results { margin-top:20px; padding:16px; border-radius:8px; }
+    .results-high { background:#f8d7da; border-left:4px solid #dc3545; }
+    .results-low  { background:#d4edda; border-left:4px solid #28a745; }
+    .row { display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+    .num-input { width:120px; padding:8px; border:1px solid #ccc; border-radius:6px; }
+    label { font-weight:500; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏥 Overdose Risk Assessment</h1>
+    <p>Machine Learning-Based Clinical Decision Support Tool</p>
+
+    <!-- Model selection -->
+    <div class="section-title">Select Assessment Type</div>
+    <div class="question">
+      <div>
+        <label><input type="radio" name="model_type" value="od" checked> General Overdose Risk (RF_OD)</label>
+        &nbsp;&nbsp;
+        <label><input type="radio" name="model_type" value="fod"> Fatal Overdose Risk (RF_FOD)</label>
+      </div>
+    </div>
+
+    <!-- Helper: Yes/No radio creator (used repeatedly) -->
+    <script>
+      function yesNo(name, labelText) {
+        const id0 = `${name}_0`, id1 = `${name}_1`;
+        return `
+          <div class="question">
+            <label for="${id0}">${labelText}</label>
+            <div>
+              <label><input id="${id0}" type="radio" name="${name}" value="0" checked> No</label>
+              &nbsp;&nbsp;
+              <label><input id="${id1}" type="radio" name="${name}" value="1"> Yes</label>
+            </div>
+          </div>
+        `;
+      }
+    </script>
+
+    <!-- Medical History -->
+    <div class="section-title">Medical History</div>
+    <div id="medical"></div>
+
+    <!-- Cardiovascular -->
+    <div class="section-title">Cardiovascular Conditions</div>
+    <div id="cardio"></div>
+
+    <!-- Neurological -->
+    <div class="section-title">Neurological Conditions</div>
+    <div id="neuro"></div>
+
+    <!-- Musculoskeletal -->
+    <div class="section-title">Musculoskeletal Conditions</div>
+    <div id="musculo"></div>
+
+    <!-- Mental Health -->
+    <div class="section-title">Mental Health Conditions</div>
+    <div id="mental"></div>
+
+    <!-- Substance Use -->
+    <div class="section-title">Substance Use History</div>
+    <div id="substance"></div>
+
+    <!-- Infectious Complications -->
+    <div class="section-title">Infectious Complications</div>
+    <div id="infect"></div>
+
+    <!-- Overdose history (FOD only) -->
+    <div class="section-title">Overdose History</div>
+    <div class="question">
+      <label for="total_od_n">Total Number of Previous Overdoses</label>
+      <input id="total_od_n" type="number" class="num-input" min="0" value="0">
+    </div>
+
+    <div class="row" style="margin-top:16px;">
+      <button id="btnCalc" class="btn">Calculate Risk</button>
+      <button id="btnReset" class="btn" type="button" onclick="document.querySelectorAll('input[type=radio][value=\"0\"]').forEach(r=>r.checked=true); document.getElementById('total_od_n').value='0'; document.getElementById('results').innerHTML='';">Reset Form</button>
+    </div>
+
+    <div id="results"></div>
+  </div>
+
+  <script>
+    // Render the repeated Yes/No items
+    document.getElementById('medical').innerHTML = [
+      yesNo("ost", "Opioid Substitution Treatment (OST)"),
+      yesNo("diabetes_date_b", "Diabetes"),
+      yesNo("hypertension_date_b", "Hypertension"),
+      yesNo("asthma_date_b", "Asthma"),
+      yesNo("copd_date_b", "COPD"),
+      yesNo("ckd_date_b", "Chronic Kidney Disease (CKD)"),
+      yesNo("depression_date_b", "Depression"),
+      yesNo("epilepsy_date_b", "Epilepsy")
+    ].join("");
+
+    document.getElementById('cardio').innerHTML = [
+      yesNo("heart_failure_date_b", "Heart Failure"),
+      yesNo("ihd_date_b", "Ischemic Heart Disease (IHD)"),
+      yesNo("angina_date_b", "Angina"),
+      yesNo("ami_date_b", "Heart Attack (AMI)"),
+      yesNo("isch_stroke_date_b", "Stroke (Ischemic)"),
+      yesNo("haemorr_stroke_date_b", "Hemorrhagic Stroke"),
+      yesNo("hosp_stroke_date_b", "Hospitalization for Stroke"),
+      yesNo("hosp_tia_date_b", "Hospitalization for TIA")
+    ].join("");
+
+    document.getElementById('neuro').innerHTML = [
+      yesNo("alzheimer_dementia_date_b", "Alzheimer's/Dementia"),
+      yesNo("parkinsonism_date_b", "Parkinson's Disease"),
+      yesNo("ms_date_b", "Multiple Sclerosis (MS)")
+    ].join("");
+
+    document.getElementById('musculo').innerHTML = [
+      yesNo("rheumatoid_arthritis_date_b", "Rheumatoid Arthritis"),
+      yesNo("osteo_arthritis_date_b", "Osteoarthritis"),
+      yesNo("osteo_porosis_date_b", "Osteoporosis")
+    ].join("");
+
+    document.getElementById('mental').innerHTML = [
+      yesNo("mood_anx_date_b", "Mood or Anxiety Disorder"),
+      yesNo("Mooddisorders", "Mood Disorders (Bipolar, Major Depression)"),
+      yesNo("psychoticdisorders", "Psychotic Disorders"),
+      yesNo("Personalitydisorders", "Personality Disorders"),
+      yesNo("Neuroticrelateddisorders", "Neurotic/Stress-Related Disorders"),
+      yesNo("Neurocognitivedisorders", "Neurocognitive Disorders"),
+      yesNo("Intellectualdisability", "Intellectual Disability"),
+      yesNo("Developmentdisorders", "Developmental Disorders"),
+      yesNo("earlyonsetdisorders", "Early Onset Psychiatric Disorders"),
+      yesNo("Multiplementalillness", "Multiple Mental Health Conditions"),
+      yesNo("Behaviouralpsychologicaldisturbances", "Behavioral/Psychological Disturbances")
+    ].join("");
+
+    document.getElementById('substance').innerHTML = [
+      yesNo("substancerelated_disorders_ui", "Substance-Related Disorders (General)"),
+      yesNo("Opioiduse", "Opioid Use Disorder"),
+      yesNo("Alcoholuse", "Alcohol Use Disorder"),
+      yesNo("Tobaccouse", "Tobacco Use Disorder"),
+      yesNo("Cannabinoiduse", "Cannabis Use Disorder"),
+      yesNo("Cocaineuse", "Cocaine Use Disorder"),
+      yesNo("Stimulantuse", "Stimulant Use Disorder"),
+      yesNo("Sedativeandhypnoticuse", "Sedative/Hypnotic Use"),
+      yesNo("Hallucinogensuse", "Hallucinogen Use Disorder"),
+      yesNo("Polysubstance", "Polysubstance Use"),
+      yesNo("Otherpsychoactivedruguse", "Other Psychoactive Drug Use")
+    ].join("");
+
+    document.getElementById('infect').innerHTML = [
+      yesNo("Endocarditis", "Endocarditis"),
+      yesNo("Osteomyelitis", "Osteomyelitis"),
+      yesNo("Tissueinfection", "Soft Tissue Infection"),
+      yesNo("Sepsis", "Sepsis")
+    ].join("");
+
+    // Helper: get 0/1 from selected radio
+    function get01(name) {
+      const el = document.querySelector(`input[name="${name}"]:checked`);
+      return el ? Number(el.value) : null;
+    }
+
+    // Build payload for OD or FOD
+    function buildPayload(modelType) {
+      const commonVars = [
+        "ost",
+        "rheumatoid_arthritis_date_b","parkinsonism_date_b",
+        "osteo_arthritis_date_b","osteo_porosis_date_b","ms_date_b",
+        "mood_anx_date_b","isch_stroke_date_b","ihd_date_b","hypertension_date_b",
+        "hosp_tia_date_b","hosp_stroke_date_b","heart_failure_date_b",
+        "haemorr_stroke_date_b","epilepsy_date_b","diabetes_date_b","depression_date_b",
+        "copd_date_b","ckd_date_b","asthma_date_b","angina_date_b","ami_date_b",
+        "alzheimer_dementia_date_b",
+        "Tobaccouse","Tissueinfection","Stimulantuse","Sepsis",
+        "Sedativeandhypnoticuse","psychoticdisorders","Polysubstance",
+        "Personalitydisorders","Otherpsychoactivedruguse","Osteomyelitis","Opioiduse",
+        "Neuroticrelateddisorders","Neurocognitivedisorders","Multiplementalillness",
+        "Mooddisorders","Intellectualdisability","Hallucinogensuse","Endocarditis",
+        "earlyonsetdisorders","Developmentdisorders","Cocaineuse","Cannabinoiduse",
+        "Behaviouralpsychologicaldisturbances","Alcoholuse"
+      ];
+
+      const payload = {};
+      // add common vars (0/1 numeric)
+      commonVars.forEach(nm => payload[nm] = get01(nm));
+
+      // model-specific substance-related key
+      const sr = get01("substancerelated_disorders_ui");
+      if (modelType === "od") {
+        payload["substancerelated.disorders"] = sr; // OD uses dot key
+      } else {
+        payload["substancerelateddisorders.x"] = sr; // FOD uses .x key
+        payload["total_od_n"] = Number(document.getElementById("total_od_n").value || 0);
+      }
+      return payload;
+    }
+
+    // --- API call ---
+    const API_BASE = "http://localhost:8000"; // change to your plumber host/port
+
+    document.getElementById("btnCalc").addEventListener("click", async () => {
+      const modelType = document.querySelector('input[name="model_type"]:checked').value;
+
+      const endpoint = modelType === "od" ? "/predict/overdose" : "/predict/fatal_overdose";
+      const payload = buildPayload(modelType);
+
+      const resBox = document.getElementById("results");
+      resBox.innerHTML = "<div class='results'>Analyzing risk factors...</div>";
+
+      try {
+        const resp = await fetch(`${API_BASE}${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+
+        if (data.error) {
+          resBox.innerHTML = `
+            <div class="results results-high">
+              <strong>Error:</strong> ${data.error}<br>
+              <small>Missing: ${Array.isArray(data.missing_features) ? data.missing_features.join(", ") : "N/A"}</small>
+            </div>`;
+          return;
+        }
+
+        const isHigh = String(data.prediction).toLowerCase() === "yes";
+        resBox.innerHTML = `
+          <div class="results ${isHigh ? "results-high" : "results-low"}">
+            <h3>🎯 Risk Assessment Results: ${isHigh ? "HIGH RISK" : "LOW RISK"}</h3>
+            <p><strong>Model Used:</strong> ${data.model}</p>
+            <p><strong>Risk Classification:</strong> ${data.prediction}</p>
+            <p><strong>Confidence Level:</strong> ${(Number(data.confidence) * 100).toFixed(1)}%</p>
+            <p><strong>Probability (No):</strong> ${data.probability_no != null ? (Number(data.probability_no) * 100).toFixed(1) + "%" : "N/A"}</p>
+            <p><strong>Probability (Yes):</strong> ${data.probability_yes != null ? (Number(data.probability_yes) * 100).toFixed(1) + "%" : "N/A"}</p>
+            <hr>
+            <p style="font-size:13px;color:#6c757d;"><strong>Note:</strong> This is a clinical decision support tool. Results should be interpreted by qualified healthcare professionals.</p>
+          </div>`;
+      } catch (err) {
+        resBox.innerHTML = `<div class="results results-high"><strong>Network/Server Error:</strong> ${err.message}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>
