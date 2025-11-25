@@ -34,9 +34,9 @@ This project is licensed under the **MIT License** — see [`LICENSE`](LICENSE).
 
 ## Citation
 If you use this system in research, please cite:
-- **Tai, Andy Man Yeung** (Year). *Machine Learning for Overdose Risk Assessment in British Columbia*. University of British Columbia.  
+- **Tai, Andy Man Yeung** (2024). *Machine Learning for Overdose Risk Assessment in British Columbia*. University of British Columbia.  
   Link: https://open.library.ubc.ca/soa/cIRcle/collections/ubctheses/24/items/1.0441300
   
-## Disclaimer: 
+## Disclaimer
 This tool is designed for research and clinical decision support. It should be used in conjunction with comprehensive clinical assessment and professional judgment. Always follow established medical protocols and guidelines for substance use disorder treatment and overdose prevention.
 

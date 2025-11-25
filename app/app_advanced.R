@@ -199,7 +199,8 @@ server <- function(input, output, session) {
   
   # Build numeric newdata row for prediction (only model-required features)
   build_newdata <- reactive({
-    vals <- lapply(common_vars, function(nm) as.numeric(input[[nm]]))
+    # Use safe01 for ALL variables to handle NULL/uninitialized inputs
+    vals <- lapply(common_vars, function(nm) safe01(input[[nm]]))
     names(vals) <- common_vars
     
     # Map SR to model-specific name + add total_od_n for FOD
@@ -208,7 +209,9 @@ server <- function(input, output, session) {
       vals[["substancerelated.disorders"]] <- sr_val
     } else {
       vals[["substancerelateddisorders.x"]] <- sr_val
-      vals[["total_od_n"]] <- safe01(input$total_od_n)  # numeric count; if unset -> 0
+      # For total_od_n, handle as numeric count
+      total_od <- input$total_od_n
+      vals[["total_od_n"]] <- if (is.null(total_od)) 0 else as.numeric(total_od)
     }
     
     as.data.frame(vals, check.names = FALSE)
@@ -216,6 +219,8 @@ server <- function(input, output, session) {
   
   # Prediction
   result <- eventReactive(input$calculate, {
+    req(input$model_type)
+    
     model <- if (identical(input$model_type, "od")) rf_od else rf_fod
     nd <- build_newdata()
     if (!is.null(model$preProcess)) nd <- predict(model$preProcess, nd)
