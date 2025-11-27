@@ -10,8 +10,8 @@ library(ranger)
 # Load models (ensure paths OK)
 # -----------------------------
 
-rf_od  <- readRDS(file.path("..","models","RF_OD.rds"))
-rf_fod <- readRDS(file.path("..","models","RF_FOD.rds"))
+rf_od  <- readRDS("RF_OD_slim.rds")
+rf_fod <- readRDS("RF_FOD_slim.rds")
 
 
 # -----------------------------

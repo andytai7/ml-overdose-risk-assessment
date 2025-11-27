@@ -1,0 +1,10 @@
+name: overdose-assessment
+title:
+username: andymytai
+account: andymytai
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16182415
+bundleId: 11241093
+url: https://andymytai.shinyapps.io/overdose-assessment/
+version: 1

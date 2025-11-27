@@ -115,7 +115,7 @@ shiny::runApp("app_simple.R")
 The app:
 - Converts all radio inputs (`"0"/"1"` strings) to **numeric** before prediction.
 - Aligns feature names and classes to match model training.
-- Shows the predicted class, probabilities, and confidence.
+- Shows the predicted class, probabilities.
 
 ---
 

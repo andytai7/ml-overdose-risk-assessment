@@ -19,8 +19,8 @@ library(glue)
 library(rmarkdown)
 
 # ---- Load models ----
-rf_od  <- readRDS(file.path("..","models","RF_OD.rds"))
-rf_fod <- readRDS(file.path("..","models","RF_FOD.rds"))
+rf_od  <- readRDS("RF_OD_slim.rds")
+rf_fod <- readRDS("RF_FOD_slim.rds")
 
 # ---- Feature groups ----
 medical <- c("ost","diabetes_date_b","hypertension_date_b","asthma_date_b","copd_date_b",
@@ -250,7 +250,6 @@ server <- function(input, output, session) {
         h3(glue("\U0001F3AF Risk Assessment Results: {if (is_high) 'HIGH RISK' else 'LOW RISK'}")),
         p(tagList(
           strong("Risk Classification: "), res$prediction, tags$br(),
-          strong("Confidence: "), sprintf("%.1f%%", res$confidence * 100), tags$br(),
           strong("Probability (No): "), sprintf("%.1f%%", res$prob_no * 100), tags$br(),
           strong("Probability (Yes): "), sprintf("%.1f%%", res$prob_yes * 100)
         ))
